@@ -1,10 +1,15 @@
 package main
 
 import (
-	"github.com/kelseyhightower/packer-builder-lxc/buider/lxc"
+	"github.com/kelseyhightower/packer-builder-lxc/builder/lxc"
 	"github.com/mitchellh/packer/packer/plugin"
 )
 
 func main() {
-	plugin.ServeBuilder(new(lxc.Builder))
+	server, err := plugin.Server()
+	if err != nil {
+		panic(err)
+	}
+	server.RegisterBuilder(new(lxc.Builder))
+	server.Serve()
 }
