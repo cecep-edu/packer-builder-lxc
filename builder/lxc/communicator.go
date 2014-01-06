@@ -2,6 +2,9 @@ package lxc
 
 import (
 	"io"
+	"log"
+	"os/exec"
+	"syscall"
 
 	"github.com/mitchellh/packer/packer"
 )
@@ -14,12 +17,29 @@ type Communicator struct {
 }
 
 // Start.
-func (c *Communicator) Start(cmd *packer.RemoteCmd) error {
-	panic("not implemented")
+func (c *Communicator) Start(remote *packer.RemoteCmd) error {
+	cmd := exec.Command("lxc-attach", "-n", c.ContainerName, "--", remote.Command)
+	// Start the command
+	log.Printf("Executing in container %s: %#v", c.ContainerName, remote.Command)
+	if err := cmd.Start(); err != nil {
+		log.Printf("Error executing: %s", err)
+		remote.SetExited(254)
+		return nil
+	}
+	err := cmd.Wait()
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		exitStatus := 1
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			exitStatus = status.ExitStatus()
+		}
+		remote.SetExited(exitStatus)
+		return nil
+	}
+	return nil
 }
 
 // Upload.
-func (c *Communicator) Upload(dst string, r io.Reader) error {
+func (c *Communicator) Upload(dst string, src io.Reader) error {
 	panic("not implemented")
 }
 
