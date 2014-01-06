@@ -1,7 +1,7 @@
 package lxc
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/packer"
@@ -11,15 +11,10 @@ import (
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 
-	SSHUsername     string `mapstructure:"ssh_username"`
-	SSHPassword     string `mapstructure:"ssh_password"`
-	SSHPort         uint   `mapstructure:"ssh_port"`
-	RawSSHTimeout   string `mapstructure:"ssh_timeout"`
-	RawStateTimeout string `mapstructure:"state_timeout"`
+	ExportPath string `mapstructure:"export_path"`
+	Image      string `mapstructure:"image"`
 
-	sshTimeout   time.Duration
-	stateTimeout time.Duration
-	tpl          *packer.ConfigTemplate
+	tpl *packer.ConfigTemplate
 }
 
 func NewConfig(raws ...interface{}) (*Config, []string, error) {
@@ -38,12 +33,28 @@ func NewConfig(raws ...interface{}) (*Config, []string, error) {
 	// Prepare the rrors
 	errs := common.CheckUnusedConfig(md)
 
-	// Set defaults.
-	if c.SSHUsername == "" {
-		c.SSHUsername = "root"
+	templates := map[string]*string{
+		"export_path": &c.ExportPath,
+		"image":       &c.Image,
 	}
-	if c.SSHPort == 0 {
-		c.SSHPort = 22
+
+	for n, ptr := range templates {
+		var err error
+		*ptr, err = c.tpl.Process(*ptr, nil)
+		if err != nil {
+			errs = packer.MultiErrorAppend(
+				errs, fmt.Errorf("Error processing %s: %s", n, err))
+		}
+	}
+
+	if c.ExportPath == "" {
+		errs = packer.MultiErrorAppend(errs,
+			fmt.Errorf("export_path must be specified"))
+	}
+
+	if c.Image == "" {
+		errs = packer.MultiErrorAppend(errs,
+			fmt.Errorf("image must be specified"))
 	}
 
 	// Check for any errors.

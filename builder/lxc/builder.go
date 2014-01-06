@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/packer"
 )
 
@@ -30,8 +31,42 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 // Run executes a lxc Packer build and returns a packer.Artifact
 // representing a lxc container image.
 func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
-	// Not yet.
-	return nil, nil
+	driver := &LXCDriver{Tpl: b.config.tpl, Ui: ui}
+	if err := driver.Verify(); err != nil {
+		return nil, err
+	}
+
+	steps := []multistep.Step{
+		&StepClone{},
+	}
+
+	// Setup the state bag and intial state for the steps.
+	state := new(multistep.BasicStateBag)
+	state.Put("config", b.config)
+	state.Put("hook", hook)
+	state.Put("ui", ui)
+
+	// Setup the driver that will talk to LXC.
+	state.Put("driver", driver)
+
+	// Run!
+	if b.config.PackerDebug {
+		b.runner = &multistep.DebugRunner{
+			Steps:   steps,
+			PauseFn: common.MultistepDebugFn(ui),
+		}
+	} else {
+		b.runner = &multistep.BasicRunner{Steps: steps}
+	}
+
+	b.runner.Run(state)
+
+	if rawErr, ok := state.GetOk("error"); ok {
+		return nil, rawErr.(error)
+	}
+
+	artifact := &ExportArtifact{path: b.config.ExportPath}
+	return artifact, nil
 }
 
 // Cancel.
