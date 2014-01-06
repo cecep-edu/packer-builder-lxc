@@ -17,6 +17,11 @@ type LXCDriver struct {
 	Tpl *packer.ConfigTemplate
 }
 
+func (l *LXCDriver) CreateTarball(src, dest string) error {
+	args := []string{"-c", "-S", "--numeric-owner", "-f", dest, "-C", src, "rootfs"}
+    return exec.Command("tar", args...).Run()
+}
+
 // CloneContainer.
 func (l *LXCDriver) CloneContainer(c *ContainerConfig) error {
 	args := []string{

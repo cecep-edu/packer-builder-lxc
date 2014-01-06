@@ -40,6 +40,7 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 		&StepCloneContainer{},
 		&StepStartContainer{},
 		&StepStopContainer{},
+		&StepCreateTarball{},
 	}
 
 	// Setup the state bag and intial state for the steps.

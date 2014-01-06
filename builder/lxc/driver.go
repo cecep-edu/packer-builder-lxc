@@ -2,6 +2,7 @@ package lxc
 
 // Driver.
 type Driver interface {
+	CreateTarball(src, dest string) error
 	// CloneContainer clones a LXC container.
 	CloneContainer(*ContainerConfig) error
 
