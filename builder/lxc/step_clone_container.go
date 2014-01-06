@@ -8,16 +8,16 @@ import (
 	"github.com/mitchellh/packer/packer"
 )
 
-type StepClone struct {
+type StepCloneContainer struct {
 	containerName string
 }
 
-func (s *StepClone) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepCloneContainer) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
 	driver := state.Get("driver").(Driver)
 	ui := state.Get("ui").(packer.Ui)
 
-	ui.Say("Starting lxc container...")
+	ui.Say(fmt.Sprintf("Cloning the %s container...", config.Image))
 
 	containerName := fmt.Sprintf("packer-%s", uuid.TimeOrderedUUID())
 	cloneConfig := ContainerConfig{
@@ -40,13 +40,13 @@ func (s *StepClone) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (s *StepClone) Cleanup(state multistep.StateBag) {
+func (s *StepCloneContainer) Cleanup(state multistep.StateBag) {
 	if s.containerName == "" {
 		return
 	}
 
 	driver := state.Get("driver").(Driver)
 	ui := state.Get("ui").(packer.Ui)
-	ui.Say(fmt.Sprintf("Destorying the container: %s", s.containerName))
+	ui.Say("Destorying the container...")
 	driver.DestroyContainer(s.containerName)
 }

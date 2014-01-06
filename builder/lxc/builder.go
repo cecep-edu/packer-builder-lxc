@@ -37,7 +37,9 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 	}
 
 	steps := []multistep.Step{
-		&StepClone{},
+		&StepCloneContainer{},
+		&StepStartContainer{},
+		&StepStopContainer{},
 	}
 
 	// Setup the state bag and intial state for the steps.

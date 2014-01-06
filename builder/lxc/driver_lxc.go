@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/mitchellh/packer/packer"
 )
@@ -18,14 +19,15 @@ type LXCDriver struct {
 
 // CloneContainer.
 func (l *LXCDriver) CloneContainer(c *ContainerConfig) error {
-	cmd := exec.Command("lxc-clone",
+	args := []string{
 		"--orig", c.OrigContainerName,
 		"--new", c.NewContainerName,
 		"--backingstore", "dir",
-	)
+	}
+	cmd := exec.Command("lxc-clone", args...)
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
-	l.Ui.Message("Running lxc-clone...")
+	l.Ui.Message(fmt.Sprintf("Running lxc-clone %s", strings.Join(args, " ")))
 	// Clone the container
 	log.Printf("Cloning the container...")
 	if err := cmd.Start(); err != nil {
@@ -51,7 +53,7 @@ func (l *LXCDriver) DestroyContainer(name string) error {
 
 // StartContainer.
 func (l *LXCDriver) StartContainer(name string) error {
-	return exec.Command("lxc-start", "-n", name).Run()
+	return exec.Command("lxc-start", "-d", "-n", name).Run()
 }
 
 // StopContainer.
