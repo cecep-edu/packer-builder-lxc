@@ -14,8 +14,8 @@ func (s *StepProvision) Run(state multistep.StateBag) multistep.StepAction {
 	// Create the communicator that talks to LXC.
 	comm := &Communicator{
 		ContainerName: containerName,
+		ContainerDir:  "/var/lib/lxc/" + containerName + "/rootfs",
 		HostDir:       tempDir,
-		ContainerDir:  "/packer-files",
 	}
 
 	prov := common.StepProvision{Comm: comm}

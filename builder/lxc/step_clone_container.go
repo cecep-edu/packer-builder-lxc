@@ -2,6 +2,7 @@ package lxc
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common/uuid"
@@ -35,6 +36,7 @@ func (s *StepCloneContainer) Run(state multistep.StateBag) multistep.StepAction 
 	}
 
 	s.containerName = containerName
+	state.Put("container_path", filepath.Join("/var/lib/lxc", s.containerName))
 	state.Put("container_name", s.containerName)
 	ui.Message(fmt.Sprintf("Container Name: %s", s.containerName))
 	return multistep.ActionContinue
